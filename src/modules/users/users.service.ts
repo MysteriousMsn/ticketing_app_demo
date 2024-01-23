@@ -23,6 +23,13 @@ export class UsersService {
       }
   })
   }
+  async findUserWithRoles(email: string): Promise<UserEntity | undefined> {
+    return this.usersRepository
+      .createQueryBuilder('user')
+      .leftJoinAndSelect('user.roles', 'roles')
+      .where('user.email = :email', { email })
+      .getOne();
+  }
   async create(user: CreateUserDto): Promise<User> {
     const existingRoles = await this.rolesRepository.find({ where: { id: In(user.roles) } });
     const newUser = this.usersRepository.create({

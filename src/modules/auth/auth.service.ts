@@ -11,7 +11,7 @@ export class AuthService {
   ) {}
 
   async signIn(email, pass) {
-    const user = await this.usersService.findOne(email);
+    const user = await this.usersService.findUserWithRoles(email);
     if (user?.password !== pass) {
       throw new UnauthorizedException('Invalid password');
     }

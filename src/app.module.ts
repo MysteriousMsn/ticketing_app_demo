@@ -12,10 +12,17 @@ import { EventEntity } from './entity/event.entity';
 import { VenueEntity } from './entity/venue.entity';
 import { TicketEntity } from './entity/ticket.entity';
 import { BookingEntity } from './entity/booking.entity';
+import { EventsController } from './modules/events/events.controller';
+import { EventsService } from './modules/events/events.service';
+import { EventsModule } from './modules/events/events.module';
+import { VenuesController } from './modules/venues/venues.controller';
+import { VenuesModule } from './modules/venues/venues.module';
 @Module({
   imports: [
     AuthModule,
     UsersModule,
+    EventsModule,
+    VenuesModule,
     ConfigModule.forRoot({
       envFilePath: ['.env.development.local'],
       isGlobal: true,
@@ -38,8 +45,11 @@ import { BookingEntity } from './entity/booking.entity';
       synchronize: true,
     }),
   ],
-  controllers: [AppController],
-  providers: [AppService],
+  controllers: [AppController, EventsController, VenuesController],
+  providers: [
+    AppService,
+    EventsService
+  ],
 })
 export class AppModule {
   constructor(private dataSource: DataSource) {}
