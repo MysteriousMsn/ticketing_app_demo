@@ -1,7 +1,7 @@
-import { Role } from "src/enums/roles.enum";
+import { RoleEntity } from "src/entity/role.entity";
 export type CreateUserDto = {
-    userId?: number;
-    username: string;
+    id?: number;
+    email: string;
     password: string;
-    roles: Role[];
+    roles: RoleEntity[];
 };

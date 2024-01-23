@@ -1,14 +1,27 @@
-import { Injectable, CanActivate, ExecutionContext, UnauthorizedException } from '@nestjs/common';
+import {
+  Injectable,
+  CanActivate,
+  ExecutionContext,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
+import { InjectRepository } from '@nestjs/typeorm';
 import { ROLES_KEY } from 'src/decorators/roles.decorator';
+import { RoleEntity } from 'src/entity/role.entity';
+import { UserEntity } from 'src/entity/user.entity';
 import { Role } from 'src/enums/roles.enum';
+import { Repository } from 'typeorm';
 
 @Injectable()
 export class RolesGuard implements CanActivate {
-  constructor(private reflector: Reflector) {}
+  constructor(
+    private reflector: Reflector,
+    @InjectRepository(UserEntity)
+    private userRepository: Repository<UserEntity>,
+  ) {}
 
-  canActivate(context: ExecutionContext): boolean {
-    const requiredRoles = this.reflector.getAllAndOverride<Role[]>(ROLES_KEY, [
+  async canActivate(context: ExecutionContext): Promise<boolean> {
+    const requiredRoles = this.reflector.getAllAndOverride<number[]>(ROLES_KEY, [
       context.getHandler(),
       context.getClass(),
     ]);
@@ -16,8 +29,18 @@ export class RolesGuard implements CanActivate {
       return true;
     }
     const { user } = context.switchToHttp().getRequest();
-    const isAuthorized = requiredRoles.some((role) => user.roles?.includes(role));
-    if(!isAuthorized){
+
+    const dbUser = await this.userRepository
+      .createQueryBuilder('u')
+      .leftJoinAndSelect('u.roles', 'roles')
+      .where('u.id = :usersId', { usersId: user.sub })
+      .getOne();
+      
+    user.roles = dbUser.roles.map(r => r.id);
+    const isAuthorized = requiredRoles.some((role) =>
+      user.roles?.includes(role),
+    );
+    if (!isAuthorized) {
       throw new UnauthorizedException('You are not authorized');
     }
     return true;
