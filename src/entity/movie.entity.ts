@@ -1,5 +1,6 @@
 // movie.entity.ts
-import { Entity, PrimaryGeneratedColumn, Column } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, ManyToMany, JoinTable } from 'typeorm';
+import { VenueEntity } from './venue.entity';
 
 @Entity('movies')
 export class MovieEntity {
@@ -7,5 +8,15 @@ export class MovieEntity {
   id: number;
 
   @Column()
-  name: string;
+  title: string;
+
+  @Column()
+  description: string;
+
+  @Column()
+  releaseDate: Date;
+
+  @ManyToMany(() => VenueEntity, { cascade: ['insert'] })
+  @JoinTable({name: 'movie_venue_mappings'})
+  venues: VenueEntity[];
 }

@@ -17,6 +17,13 @@ import { EventsService } from './modules/events/events.service';
 import { EventsModule } from './modules/events/events.module';
 import { VenuesController } from './modules/venues/venues.controller';
 import { VenuesModule } from './modules/venues/venues.module';
+import { MoviesModule } from './modules/movies/movies.module';
+import { MovieEntity } from './entity/movie.entity';
+import { SeatEntity } from './entity/seat.entity';
+import { SeatsService } from './modules/seats/seats.service';
+import { SeatsController } from './modules/seats/seats.controller';
+import { SeatsModule } from './modules/seats/seats.module';
+import { TicketsModule } from './modules/tickets/tickets.module';
 @Module({
   imports: [
     AuthModule,
@@ -40,15 +47,22 @@ import { VenuesModule } from './modules/venues/venues.module';
         EventEntity,
         VenueEntity,
         TicketEntity,
-        BookingEntity
+        BookingEntity,
+        MovieEntity,
+        SeatEntity,
+        TicketEntity
       ],
       synchronize: true,
     }),
+    MoviesModule,
+    SeatsModule,
+    TicketsModule,
   ],
-  controllers: [AppController, EventsController, VenuesController],
+  controllers: [AppController, EventsController, VenuesController, SeatsController],
   providers: [
     AppService,
-    EventsService
+    EventsService,
+    SeatsService
   ],
 })
 export class AppModule {

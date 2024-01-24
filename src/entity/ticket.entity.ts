@@ -1,15 +1,22 @@
-// ticket.entity.ts
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne } from 'typeorm';
-import { BookingEntity } from './booking.entity';
+import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn } from 'typeorm';
+import { VenueEntity } from './venue.entity';
+import { SeatEntity } from './seat.entity';
 
 @Entity('tickets')
 export class TicketEntity {
   @PrimaryGeneratedColumn()
-  id: number;
+  id: string;
 
-  @Column()
-  seatNumber: string;
+  @ManyToOne(() => SeatEntity, (seat) => seat.tickets, { onDelete: 'CASCADE' })
+  @JoinColumn({ name: 'seatId', referencedColumnName: 'id' })
+  seat: SeatEntity;
 
-  @ManyToOne(() => BookingEntity, (booking) => booking.tickets, { cascade: ['insert'] })
-  booking: BookingEntity;
+  @Column({ type: 'float' })
+  price: number;
+
+  @ManyToOne(() => VenueEntity, (venue) => venue.tickets, { onDelete: 'CASCADE' })
+  venue: VenueEntity;
+  
+  @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
+  priceUpdatedAt: Date;
 }

@@ -2,9 +2,10 @@
 import { Controller, Get, Param, Post, Body, Put, Delete } from '@nestjs/common';
 import { VenuesService } from './venues.service';
 import { VenueEntity } from 'src/entity/venue.entity';
-import { CreateVenueDto, UpdateVenueDto } from './venues.dto';
+import { VenueDto, venueSchema } from './venues.dto';
 import { Roles } from 'src/decorators/roles.decorator';
 import { Role } from 'src/enums/roles.enum';
+import { ZodValidationPipe } from 'src/utils/zod.validation';
 
 @Roles(Role.Admin)
 @Controller('venues')
@@ -12,27 +13,27 @@ export class VenuesController {
   constructor(private readonly venuesService: VenuesService) {}
 
   @Get()
-  async findAllVenues(): Promise<VenueEntity[]> {
+  async findAll(): Promise<VenueEntity[]> {
     return this.venuesService.findAllVenues();
   }
 
   @Get(':id')
-  async findVenueById(@Param('id') id: string): Promise<VenueEntity | undefined> {
+  async findById(@Param('id') id: string): Promise<VenueEntity | undefined> {
     return this.venuesService.findVenueById(Number(id));
   }
 
   @Post()
-  async createVenue(@Body() venueDto: CreateVenueDto): Promise<VenueEntity> {
-    return this.venuesService.createVenue(venueDto);
+  async create(@Body(new ZodValidationPipe(venueSchema)) createVenueDto: VenueDto): Promise<VenueEntity> {
+    return this.venuesService.createVenue(createVenueDto);
   }
 
   @Put(':id')
-  async updateVenue(@Param('id') id: string, @Body() venueDto: UpdateVenueDto): Promise<VenueEntity | undefined> {
-    return this.venuesService.updateVenue(Number(id), venueDto);
+  async update(@Param('id') id: string, @Body(new ZodValidationPipe(venueSchema)) updateVenueDto: VenueDto): Promise<VenueEntity | undefined> {
+    return this.venuesService.updateVenue(Number(id), updateVenueDto);
   }
 
   @Delete(':id')
-  async deleteVenue(@Param('id') id: string): Promise<void> {
+  async delete(@Param('id') id: string): Promise<void> {
     return this.venuesService.deleteVenue(Number(id));
   }
 }

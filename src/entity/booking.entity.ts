@@ -12,9 +12,9 @@ export class BookingEntity {
   @ManyToOne(() => UserEntity, (user) => user.bookings, { cascade: ['insert'] })
   user: UserEntity;
 
-  @ManyToOne(() => EventEntity, (event) => event.bookings, { cascade: ['insert'] })
-  event: EventEntity;
+  // @ManyToOne(() => EventEntity, (event) => event.bookings, { cascade: ['insert'] })
+  // event: EventEntity;
 
-  @OneToMany(() => TicketEntity, (ticket) => ticket.booking, { cascade: ['insert'] })
-  tickets: TicketEntity[];
+  // @OneToMany(() => TicketEntity, (ticket) => ticket.booking, { cascade: ['insert'] })
+  // tickets: TicketEntity[];
 }

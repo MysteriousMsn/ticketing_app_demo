@@ -1,7 +1,6 @@
 // event.entity.ts
 import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, OneToMany } from 'typeorm';
 import { VenueEntity } from './venue.entity';
-import { BookingEntity } from './booking.entity';
 
 @Entity('events')
 export class EventEntity {
@@ -11,9 +10,12 @@ export class EventEntity {
   @Column()
   name: string;
 
+  @Column()
+  price: number;
+
   @ManyToOne(() => VenueEntity, (venue) => venue.events)
   venue: VenueEntity;
 
-  @OneToMany(() => BookingEntity, (booking) => booking.event,  { cascade: ['insert'] })
-  bookings: BookingEntity[];
+  // @OneToMany(() => BookingEntity, (booking) => booking.event,  { cascade: ['insert'] })
+  // bookings: BookingEntity[];
 }
