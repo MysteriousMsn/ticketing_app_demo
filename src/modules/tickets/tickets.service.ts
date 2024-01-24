@@ -14,6 +14,10 @@ export class TicketsService {
     private readonly venueRepository: Repository<VenueEntity>,
   ) {}
 
+  async findAll(): Promise<TicketEntity[]> {
+    return this.ticketRepository.find();
+  }
+
   async createTicket(ticketDto: TicketDto): Promise<TicketEntity> {
     
     const venue = await this.venueRepository
@@ -27,9 +31,6 @@ export class TicketsService {
       throw new NotFoundException('ticket not found');
     }
     const seat = venue.seats.find((s) => s.id === ticketDto.seat);
-    if (!seat) {
-      throw new NotFoundException('Seat not found in the specified venue');
-    }
 
       const existingTicket = await this.ticketRepository
       .createQueryBuilder('ticket')
@@ -39,17 +40,43 @@ export class TicketsService {
     if (existingTicket) {
       throw new BadRequestException('Ticket already exists for the specified seat');
     }
-    const ticket = {
+   
+    const newTicket = this.ticketRepository.create({
       name: ticketDto.name,
       price: ticketDto.price,
-    }
-    const newTicket = this.ticketRepository.create({
-      ...ticket,
       seat,
       venue,
     });
-
     return this.ticketRepository.save(newTicket);
+  }
+
+  async updateTicket(ticketId: string, ticketDto: TicketDto): Promise<TicketEntity> {
+    const venue = await this.venueRepository
+      .createQueryBuilder('venue')
+      .innerJoinAndSelect('venue.seats', 'seats')
+      .where('venue.id = :venueId', { venueId: ticketDto.venue })
+      .andWhere('seats.id = :seatId', { seatId: ticketDto.seat })
+      .getOne();
+
+    if (!venue) {
+      throw new NotFoundException('Venue not found');
+    }
+    const seat = venue.seats.find((s) => s.id === ticketDto.seat);
+    const existingTicket = await this.ticketRepository
+      .createQueryBuilder('ticket')
+      .where('ticket.id = :id', { id: ticketId })
+      .getOne();
+
+    if (!existingTicket) {
+      throw new NotFoundException('Ticket not found');
+    }
+
+    existingTicket.name = ticketDto.name;
+    existingTicket.price = ticketDto.price;
+    existingTicket.seat = seat;
+    existingTicket.venue = venue;
+
+    return this.ticketRepository.save(existingTicket);
   }
 
   async getTicketsByVenue(venueId: string): Promise<TicketEntity[]> {
@@ -60,16 +87,18 @@ export class TicketsService {
       .getMany();
   }
 
-  async getTicketById(ticketId: string): Promise<TicketEntity> {
-    const ticket = await this.ticketRepository.findOneBy({ id: ticketId });
+  async findById(id: number): Promise<TicketEntity> {
+    const ticket = await this.ticketRepository.findOneBy({ id });
     if (!ticket) {
       throw new NotFoundException('Ticket not found');
     }
     return ticket;
   }
 
-  async deleteTicket(ticketId: string): Promise<void> {
-    await this.getTicketById(ticketId); // Ensure the ticket exists
-    await this.ticketRepository.delete(ticketId);
+  async delete(id: number): Promise<void> {
+    const result = await this.ticketRepository.delete(id);
+    if (result.affected === 0) {
+      throw new NotFoundException(`Ticket with ID ${id} not found`);
+    }
   }
 }

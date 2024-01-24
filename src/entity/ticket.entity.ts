@@ -5,7 +5,10 @@ import { SeatEntity } from './seat.entity';
 @Entity('tickets')
 export class TicketEntity {
   @PrimaryGeneratedColumn()
-  id: string;
+  id: number;
+
+  @Column()
+  name: string;
 
   @ManyToOne(() => SeatEntity, (seat) => seat.tickets, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'seatId', referencedColumnName: 'id' })
