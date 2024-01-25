@@ -34,7 +34,6 @@ export class BookingsService {
 
   async create(createBookingDto: CreateBookingDto): Promise<BookingEntity> {
     const { userId, seatId, venueId, movieId, ticketId } = createBookingDto;
-
     const [user, seat, venue, movie, ticket] = await Promise.all([
         this.userRepository.findOneBy({id: userId}),
         this.seatRepository.findOneBy({id: seatId}),
@@ -45,7 +44,6 @@ export class BookingsService {
     if (!user || !seat || !venue || !movie || !ticket) {
       throw new NotFoundException('One or more related entities not found');
     }
-    
     if (seat.isReserved) {
       throw new ConflictException('Seat is already reserved');
     }
@@ -56,12 +54,9 @@ export class BookingsService {
       movie,
       ticket,
     });
-  
     const savedBooking = await this.bookingRepository.save(newBooking);
-
     seat.isReserved = true;
     await this.seatRepository.save(seat);
-
     return savedBooking;
   }
 
@@ -74,12 +69,51 @@ export class BookingsService {
   }
 
   async findAll(): Promise<BookingEntity[]> {
-    return this.bookingRepository.find();
+    const bookings = await this.bookingRepository
+      .createQueryBuilder('booking')
+      .innerJoinAndSelect('booking.user', 'user')
+      .innerJoinAndSelect('booking.seat', 'seat')
+      .innerJoinAndSelect('booking.venue', 'venue')
+      .innerJoinAndSelect('booking.movie', 'movie')
+      .innerJoinAndSelect('booking.ticket', 'ticket')
+      .getMany();
+    return bookings;
   }
 
   async update(id: number, updateBookingDto: CreateBookingDto): Promise<BookingEntity> {
-    const booking = await this.findOne(id);
-    return this.bookingRepository.save({ ...booking, ...updateBookingDto });
+    
+    const { userId, seatId, venueId, movieId, ticketId } = updateBookingDto;
+    const [booking, user, seat, venue, movie, ticket] = await Promise.all([
+      this.bookingRepository
+        .createQueryBuilder('booking')
+        .innerJoinAndSelect('booking.seat', 'seat')
+        .where('booking.id = :id', { id })
+        .getOne(),
+      this.userRepository.findOneBy({ id: userId }),
+      this.seatRepository.findOneBy({ id: seatId }),
+      this.venueRepository.findOneBy({ id: venueId }),
+      this.movieRepository.findOneBy({ id: movieId }),
+      this.ticketRepository.findOneBy({ id: ticketId }),
+    ]);
+    if (!user || !seat || !venue || !movie || !ticket) {
+      throw new NotFoundException('One or more related entities not found');
+    }
+    if (seat.isReserved) {
+      throw new ConflictException('Seat is reserved');
+    }
+
+    booking.seat.isReserved = false;
+    await this.bookingRepository.save(booking);
+    seat.isReserved = true;
+    
+    booking.user = user;
+    booking.seat = seat;
+    booking.venue = venue;
+    booking.movie = movie;
+    booking.ticket = ticket;
+    
+    const savedBooking = await this.bookingRepository.save(booking);
+    return savedBooking;
   }
 
   async remove(id: number): Promise<void> {

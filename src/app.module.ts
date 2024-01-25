@@ -12,9 +12,6 @@ import { EventEntity } from './entity/event.entity';
 import { VenueEntity } from './entity/venue.entity';
 import { TicketEntity } from './entity/ticket.entity';
 import { BookingEntity } from './entity/booking.entity';
-import { EventsController } from './modules/events/events.controller';
-import { EventsService } from './modules/events/events.service';
-import { EventsModule } from './modules/events/events.module';
 import { VenuesController } from './modules/venues/venues.controller';
 import { VenuesModule } from './modules/venues/venues.module';
 import { MoviesModule } from './modules/movies/movies.module';
@@ -31,7 +28,6 @@ import { BookingsModule } from './modules/bookings/bookings.module';
   imports: [
     AuthModule,
     UsersModule,
-    EventsModule,
     VenuesModule,
     ConfigModule.forRoot({
       envFilePath: ['.env.development.local'],
@@ -62,10 +58,9 @@ import { BookingsModule } from './modules/bookings/bookings.module';
     TicketsModule,
     BookingsModule,
   ],
-  controllers: [AppController, EventsController, VenuesController, SeatsController, BookingsController],
+  controllers: [AppController, VenuesController, SeatsController, BookingsController],
   providers: [
     AppService,
-    EventsService,
     SeatsService,
     BookingsService
   ],

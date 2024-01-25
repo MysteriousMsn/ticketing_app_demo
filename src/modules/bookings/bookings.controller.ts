@@ -1,9 +1,10 @@
 // booking.controller.ts
 import { Controller, Get, Post, Put, Delete, Param, Body, ParseIntPipe } from '@nestjs/common';
 import { BookingsService } from './bookings.service';
-import { CreateBookingDto } from './bookings.dto';
+import { CreateBookingDto, createBookingSchema } from './bookings.dto';
 import { Roles } from 'src/decorators/roles.decorator';
 import { Role } from 'src/enums/roles.enum';
+import { ZodValidationPipe } from 'src/utils/zod.validation';
 
 @Controller('bookings')
 export class BookingsController {
@@ -11,7 +12,7 @@ export class BookingsController {
 
   @Post()
   @Roles(Role.User)
-  create(@Body() createBookingDto: CreateBookingDto) {
+  create(@Body(new ZodValidationPipe(createBookingSchema)) createBookingDto: CreateBookingDto) {
     return this.bookingService.create(createBookingDto);
   }
 
@@ -26,7 +27,7 @@ export class BookingsController {
   }
 
   @Put(':id')
-  update(@Param('id', ParseIntPipe) id: number, @Body() updateBookingDto: CreateBookingDto) {
+  update(@Param('id', ParseIntPipe) id: number, @Body(new ZodValidationPipe(createBookingSchema)) updateBookingDto: CreateBookingDto) {
     return this.bookingService.update(id, updateBookingDto);
   }
 

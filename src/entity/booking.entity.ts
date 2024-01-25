@@ -14,7 +14,7 @@ export class BookingEntity {
   @JoinColumn({ name: 'userId' })
   user: UserEntity;
 
-  @ManyToOne(() => SeatEntity, (seat) => seat.bookings, { onDelete: 'CASCADE' })
+  @ManyToOne(() => SeatEntity, (seat) => seat.bookings, { onDelete: 'CASCADE', cascade: ['update'] })
   @JoinColumn({ name: 'seatId' })
   seat: SeatEntity;
 
@@ -29,6 +29,9 @@ export class BookingEntity {
   @ManyToOne(() => TicketEntity, (ticket) => ticket.bookings, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'ticketId' })
   ticket: TicketEntity;
+
+  @Column({comment: '0=cancelled, 1=booked, 2=Completed'})
+  status: number;
 
   @CreateDateColumn()
   createdDate: Date

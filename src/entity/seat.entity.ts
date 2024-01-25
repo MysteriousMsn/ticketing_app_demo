@@ -19,6 +19,9 @@ export class SeatEntity {
   column: string;
 
   @Column({ default: false })
+  isBlocked: boolean;
+
+  @Column({ default: false })
   isReserved: boolean;
 
   @ManyToOne(() => VenueEntity, (venue) => venue.seats, { onDelete: 'CASCADE' })
