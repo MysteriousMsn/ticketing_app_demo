@@ -1,9 +1,10 @@
 // venue.entity.ts
-import { Entity, PrimaryGeneratedColumn, Column, OneToMany, ManyToMany, JoinTable } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, OneToMany, ManyToMany, JoinTable, CreateDateColumn, UpdateDateColumn } from 'typeorm';
 import { EventEntity } from './event.entity';
 import { MovieEntity } from './movie.entity';
 import { SeatEntity } from './seat.entity';
 import { TicketEntity } from './ticket.entity';
+import { BookingEntity } from './booking.entity';
 
 @Entity('venues')
 export class VenueEntity {
@@ -12,6 +13,9 @@ export class VenueEntity {
 
   @Column()
   name: string;
+
+  @Column()
+  location: number;
 
   @OneToMany(() => EventEntity, (event) => event.venue, { cascade: ['insert'] })
   events: EventEntity[];
@@ -25,4 +29,13 @@ export class VenueEntity {
   
   @OneToMany(() => TicketEntity, (ticket) => ticket.venue, { cascade: true })
   tickets: TicketEntity[];
+
+  @OneToMany(() => BookingEntity, (booking) => booking.venue)
+  bookings: BookingEntity[];
+
+  @CreateDateColumn()
+  createdDate: Date
+
+  @UpdateDateColumn()
+  updatedDate: Date
 }

@@ -5,13 +5,14 @@ import { MoviesService } from './movies.service';
 import { MovieDto, MovieSchema } from './movies.dto';
 import { MovieEntity } from 'src/entity/movie.entity';
 import { ZodValidationPipe } from 'src/utils/zod.validation';
+import { Public } from 'src/decorators/public.decorator';
 
-@Roles(Role.Admin)
 @Controller('movies')
 export class MoviesController {
   constructor(private readonly moviesService: MoviesService) {}
 
   @Get()
+  @Public()
   async findAll(): Promise<MovieEntity[]> {
     return this.moviesService.findAll();
   }
@@ -21,10 +22,12 @@ export class MoviesController {
     return this.moviesService.findById(Number(id));
   }
   @Post()
+  @Roles(Role.Admin)
   async create(@Body(new ZodValidationPipe(MovieSchema)) createMovieDto: MovieDto): Promise<MovieEntity> {
     return this.moviesService.create(createMovieDto);
   }
   @Put(':id')
+  @Roles(Role.Admin)
   async update(
     @Param('id') id: string,
     @Body(new ZodValidationPipe(MovieSchema)) updateMovieDto: MovieDto
@@ -33,6 +36,7 @@ export class MoviesController {
   }
 
   @Delete(':id')
+  @Roles(Role.Admin)
   async delete(@Param('id') id: string): Promise<void> {
     return this.moviesService.delete(Number(id));
   }

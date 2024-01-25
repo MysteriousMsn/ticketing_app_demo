@@ -1,5 +1,4 @@
 // event.dto.ts
-import { VenueEntity } from 'src/entity/venue.entity';
 import { z } from 'zod';
 
 export const MovieSchema = z.object({

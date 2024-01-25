@@ -7,9 +7,7 @@ import {
 import { Reflector } from '@nestjs/core';
 import { InjectRepository } from '@nestjs/typeorm';
 import { ROLES_KEY } from 'src/decorators/roles.decorator';
-import { RoleEntity } from 'src/entity/role.entity';
 import { UserEntity } from 'src/entity/user.entity';
-import { Role } from 'src/enums/roles.enum';
 import { Repository } from 'typeorm';
 
 @Injectable()

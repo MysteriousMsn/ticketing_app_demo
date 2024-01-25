@@ -4,6 +4,7 @@ import { TicketEntity } from 'src/entity/ticket.entity';
 import { VenueEntity } from 'src/entity/venue.entity';
 import { Repository } from 'typeorm';
 import { TicketDto } from './tickets.dto';
+import { SeatEntity } from 'src/entity/seat.entity';
 
 @Injectable()
 export class TicketsService {
@@ -17,20 +18,33 @@ export class TicketsService {
   async findAll(): Promise<TicketEntity[]> {
     return this.ticketRepository.find();
   }
-
-  async createTicket(ticketDto: TicketDto): Promise<TicketEntity> {
-    
+  async getVenueAndSeat(venueId: number, seatId: number): Promise<{ venue: VenueEntity; seat: SeatEntity }> {
     const venue = await this.venueRepository
-      .createQueryBuilder('venue')
-      .innerJoinAndSelect('venue.seats', 'seats')
-      .where('venue.id = :venueId', { venueId: ticketDto.venue })
-      .andWhere('seats.id = :seatId', {seatId: ticketDto.seat})
+    .createQueryBuilder('venue')
+    .innerJoinAndSelect('venue.seats', 'seats')
+    .where('venue.id = :venueId', { venueId })
+    .andWhere('seats.id = :seatId', { seatId })
+    .getOne();
+
+  if (!venue) {
+    throw new NotFoundException('ticket not found');
+  }
+  const seat = venue.seats.find((s) => s.id === seatId);
+  return { venue, seat };
+  }
+
+  private async checkTicketExistence(seatId: string): Promise<void> {
+    const existingTicket = await this.ticketRepository
+      .createQueryBuilder('ticket')
+      .where('ticket.seat = :seat', { seat: seatId })
       .getOne();
 
-    if (!venue) {
-      throw new NotFoundException('ticket not found');
+    if (existingTicket) {
+      throw new BadRequestException('Ticket already exists for the specified seat');
     }
-    const seat = venue.seats.find((s) => s.id === ticketDto.seat);
+  }
+  async createTicket(ticketDto: TicketDto): Promise<TicketEntity> {
+    const { venue, seat } = await this.getVenueAndSeat(ticketDto.venue, ticketDto.seat);
 
       const existingTicket = await this.ticketRepository
       .createQueryBuilder('ticket')
@@ -51,20 +65,12 @@ export class TicketsService {
   }
 
   async updateTicket(ticketId: string, ticketDto: TicketDto): Promise<TicketEntity> {
-    const venue = await this.venueRepository
-      .createQueryBuilder('venue')
-      .innerJoinAndSelect('venue.seats', 'seats')
-      .where('venue.id = :venueId', { venueId: ticketDto.venue })
-      .andWhere('seats.id = :seatId', { seatId: ticketDto.seat })
-      .getOne();
-
-    if (!venue) {
-      throw new NotFoundException('Venue not found');
-    }
-    const seat = venue.seats.find((s) => s.id === ticketDto.seat);
+    const { venue, seat } = await this.getVenueAndSeat(ticketDto.venue, ticketDto.seat);
     const existingTicket = await this.ticketRepository
       .createQueryBuilder('ticket')
-      .where('ticket.id = :id', { id: ticketId })
+      .innerJoinAndSelect('ticket.seat', 'seat')
+      .where('ticket.id = :ticketId', { ticketId })
+      .andWhere('seat.id = :seatId', { seatId: ticketDto.seat })
       .getOne();
 
     if (!existingTicket) {

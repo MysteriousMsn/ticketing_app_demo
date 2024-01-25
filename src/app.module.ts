@@ -24,6 +24,9 @@ import { SeatsService } from './modules/seats/seats.service';
 import { SeatsController } from './modules/seats/seats.controller';
 import { SeatsModule } from './modules/seats/seats.module';
 import { TicketsModule } from './modules/tickets/tickets.module';
+import { BookingsController } from './modules/bookings/bookings.controller';
+import { BookingsService } from './modules/bookings/bookings.service';
+import { BookingsModule } from './modules/bookings/bookings.module';
 @Module({
   imports: [
     AuthModule,
@@ -57,12 +60,14 @@ import { TicketsModule } from './modules/tickets/tickets.module';
     MoviesModule,
     SeatsModule,
     TicketsModule,
+    BookingsModule,
   ],
-  controllers: [AppController, EventsController, VenuesController, SeatsController],
+  controllers: [AppController, EventsController, VenuesController, SeatsController, BookingsController],
   providers: [
     AppService,
     EventsService,
-    SeatsService
+    SeatsService,
+    BookingsService
   ],
 })
 export class AppModule {

@@ -2,10 +2,11 @@
 
 import { Controller, Post, Get, Param, Body, ParseUUIDPipe, Put, Delete } from '@nestjs/common';
 import { TicketsService } from './tickets.service';
-import { VenuesService } from '../venues/venues.service';
 import { TicketEntity } from 'src/entity/ticket.entity';
 import { TicketDto, TicketSchema } from './tickets.dto';
 import { ZodValidationPipe } from 'src/utils/zod.validation';
+import { Roles } from 'src/decorators/roles.decorator';
+import { Role } from 'src/enums/roles.enum';
 
 @Controller('tickets')
 export class TicketsController {

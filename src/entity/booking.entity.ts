@@ -1,7 +1,8 @@
-// booking.entity.ts
-import { Entity, PrimaryGeneratedColumn, ManyToOne, OneToMany } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, ManyToOne, JoinColumn, Column, OneToOne, CreateDateColumn, UpdateDateColumn } from 'typeorm';
 import { UserEntity } from './user.entity';
-import { EventEntity } from './event.entity';
+import { SeatEntity } from './seat.entity';
+import { VenueEntity } from './venue.entity';
+import { MovieEntity } from './movie.entity';
 import { TicketEntity } from './ticket.entity';
 
 @Entity('bookings')
@@ -9,12 +10,29 @@ export class BookingEntity {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @ManyToOne(() => UserEntity, (user) => user.bookings, { cascade: ['insert'] })
+  @ManyToOne(() => UserEntity, (user) => user.bookings, { onDelete: 'CASCADE' })
+  @JoinColumn({ name: 'userId' })
   user: UserEntity;
 
-  // @ManyToOne(() => EventEntity, (event) => event.bookings, { cascade: ['insert'] })
-  // event: EventEntity;
+  @ManyToOne(() => SeatEntity, (seat) => seat.bookings, { onDelete: 'CASCADE' })
+  @JoinColumn({ name: 'seatId' })
+  seat: SeatEntity;
 
-  // @OneToMany(() => TicketEntity, (ticket) => ticket.booking, { cascade: ['insert'] })
-  // tickets: TicketEntity[];
+  @ManyToOne(() => VenueEntity, (venue) => venue.bookings, { onDelete: 'CASCADE' })
+  @JoinColumn({ name: 'venueId' })
+  venue: VenueEntity;
+
+  @ManyToOne(() => MovieEntity, (movie) => movie.bookings, { onDelete: 'CASCADE' })
+  @JoinColumn({ name: 'movieId' })
+  movie: MovieEntity;
+
+  @ManyToOne(() => TicketEntity, (ticket) => ticket.bookings, { onDelete: 'CASCADE' })
+  @JoinColumn({ name: 'ticketId' })
+  ticket: TicketEntity;
+
+  @CreateDateColumn()
+  createdDate: Date
+
+  @UpdateDateColumn()
+  updatedDate: Date
 }

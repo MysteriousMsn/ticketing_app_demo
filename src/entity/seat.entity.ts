@@ -2,6 +2,7 @@
 import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn, OneToMany } from 'typeorm';
 import { VenueEntity } from './venue.entity';
 import { TicketEntity } from './ticket.entity';
+import { BookingEntity } from './booking.entity';
 
 @Entity('seats')
 export class SeatEntity {
@@ -26,4 +27,7 @@ export class SeatEntity {
 
   @OneToMany(() => TicketEntity, (ticket) => ticket.seat)
   tickets: TicketEntity[];
+  
+  @OneToMany(() => BookingEntity, (booking) => booking.seat)
+  bookings: BookingEntity[];
 }
