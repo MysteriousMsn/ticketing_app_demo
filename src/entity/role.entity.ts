@@ -17,6 +17,9 @@ export class RoleEntity {
   })
   name: string;
 
+  @Column({ default: 1, comment: '0=Inactive, 1=Active' })
+  status: number;
+
   @CreateDateColumn()
   createdDate: Date;
 

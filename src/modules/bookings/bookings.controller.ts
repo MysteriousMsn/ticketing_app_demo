@@ -62,12 +62,13 @@ export class BookingsController {
     updateBookingDto: CreateBookingDto,
   ) {
     const userId = request['user'].sub;
-    return this.bookingService.update(id, updateBookingDto, userId);
+    const isAdmin = request['isAdmin'];
+    return this.bookingService.update(id, updateBookingDto, userId, isAdmin);
   }
 
   @Patch(':id')
   @Roles(Role.User, Role.Admin)
-  async Cancel(
+  async cancel(
     @Req() request: Request,
     @Res() res: Response,
     @Param('id', ParseIntPipe) id: number,
@@ -82,7 +83,7 @@ export class BookingsController {
   }
 
   @Delete(':id')
-  @Roles(Role.User, Role.Admin)
+  @Roles(Role.Admin)
   remove(@Param('id', ParseIntPipe) id: number) {
     return this.bookingService.remove(id);
   }

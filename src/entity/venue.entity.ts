@@ -43,6 +43,9 @@ export class VenueEntity {
   @OneToMany(() => BookingEntity, (booking) => booking.venue)
   bookings: BookingEntity[];
 
+  @Column({ default: 1, comment: '0=Inactive, 1=Active' })
+  status: number;
+
   @CreateDateColumn()
   createdDate: Date;
 

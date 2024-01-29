@@ -1,5 +1,14 @@
 // venue.entity.ts
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn, OneToMany } from 'typeorm';
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  ManyToOne,
+  JoinColumn,
+  OneToMany,
+  CreateDateColumn,
+  UpdateDateColumn,
+} from 'typeorm';
 import { VenueEntity } from './venue.entity';
 import { TicketEntity } from './ticket.entity';
 import { BookingEntity } from './booking.entity';
@@ -30,7 +39,16 @@ export class SeatEntity {
 
   @OneToMany(() => TicketEntity, (ticket) => ticket.seat)
   tickets: TicketEntity[];
-  
+
   @OneToMany(() => BookingEntity, (booking) => booking.seat)
   bookings: BookingEntity[];
+
+  @Column({ default: 1, comment: '0=Inactive, 1=Active' })
+  status: number;
+
+  @CreateDateColumn()
+  createdDate: Date;
+
+  @UpdateDateColumn()
+  updatedDate: Date;
 }

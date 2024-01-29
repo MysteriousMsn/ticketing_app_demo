@@ -1,4 +1,11 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn, OneToMany } from 'typeorm';
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  ManyToOne,
+  JoinColumn,
+  OneToMany,
+} from 'typeorm';
 import { VenueEntity } from './venue.entity';
 import { SeatEntity } from './seat.entity';
 import { BookingEntity } from './booking.entity';
@@ -18,12 +25,19 @@ export class TicketEntity {
   @Column({ type: 'float' })
   price: number;
 
-  @ManyToOne(() => VenueEntity, (venue) => venue.tickets, { onDelete: 'CASCADE' })
+  @ManyToOne(() => VenueEntity, (venue) => venue.tickets, {
+    onDelete: 'CASCADE',
+  })
   venue: VenueEntity;
-  
+
   @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
   priceUpdatedAt: Date;
 
-  @OneToMany(() => BookingEntity, (booking) => booking.ticket, { onDelete: 'CASCADE' })
+  @OneToMany(() => BookingEntity, (booking) => booking.ticket, {
+    onDelete: 'CASCADE',
+  })
   bookings: BookingEntity[];
+
+  @Column({ default: 1, comment: '0=Inactive, 1=Active' })
+  status: number;
 }

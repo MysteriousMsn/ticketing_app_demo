@@ -99,22 +99,29 @@ export class BookingsService {
   }
 
   async update(
-    id: number,
+    bookingId: number,
     updateBookingDto: CreateBookingDto,
     userId: number,
+    isAdmin: boolean,
   ): Promise<BookingEntity> {
+    let bookingQuery = this.bookingRepository
+      .createQueryBuilder('booking')
+      .innerJoinAndSelect('booking.seat', 'seat')
+      .innerJoinAndSelect('booking.user', 'user')
+      .where('booking.id = :bookingId', { bookingId });
+
+    if (!isAdmin) {
+      bookingQuery.andWhere('user.id = :userId', { userId });
+    }
+
     const { seatId, venueId, movieId, ticketId } = updateBookingDto;
     const [booking, user, seat, venue, movie, ticket] = await Promise.all([
-      this.bookingRepository
-        .createQueryBuilder('booking')
-        .innerJoinAndSelect('booking.seat', 'seat')
-        .where('booking.id = :id', { id })
-        .getOne(),
-      this.userRepository.findOneBy({ id: userId }),
-      this.seatRepository.findOneBy({ id: seatId }),
-      this.venueRepository.findOneBy({ id: venueId }),
-      this.movieRepository.findOneBy({ id: movieId }),
-      this.ticketRepository.findOneBy({ id: ticketId }),
+      bookingQuery.getOne(),
+      this.userRepository.findOneBy({ id: userId, status: 1 }),
+      this.seatRepository.findOneBy({ id: seatId, status: 1 }),
+      this.venueRepository.findOneBy({ id: venueId, status: 1 }),
+      this.movieRepository.findOneBy({ id: movieId, status: 1 }),
+      this.ticketRepository.findOneBy({ id: ticketId, status: 1 }),
     ]);
     if (!booking) {
       throw new NotFoundException('Booking not found');
@@ -151,7 +158,7 @@ export class BookingsService {
       .innerJoinAndSelect('booking.seat', 'seat')
       .innerJoinAndSelect('booking.user', 'user')
       .where('booking.id = :bookingId', { bookingId })
-      .where('user.id = :userId', { userId })
+      .andWhere('user.id = :userId', { userId })
       .getOne();
 
     if (!booking) {
