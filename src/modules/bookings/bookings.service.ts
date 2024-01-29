@@ -54,6 +54,7 @@ export class BookingsService {
     if (seat.isReserved) {
       throw new ConflictException('Seat is already reserved');
     }
+    seat.isReserved = true;
     const newBooking = this.bookingRepository.create({
       user,
       seat,
@@ -62,8 +63,6 @@ export class BookingsService {
       ticket,
     });
     const savedBooking = await this.bookingRepository.save(newBooking);
-    seat.isReserved = true;
-    await this.seatRepository.save(seat);
     return savedBooking;
   }
 
@@ -141,6 +140,36 @@ export class BookingsService {
     booking.venue = venue;
     booking.movie = movie;
     booking.ticket = ticket;
+
+    const savedBooking = await this.bookingRepository.save(booking);
+    return savedBooking;
+  }
+
+  async cancel(bookingId: number, userId: number): Promise<BookingEntity> {
+    const booking = await this.bookingRepository
+      .createQueryBuilder('booking')
+      .innerJoinAndSelect('booking.seat', 'seat')
+      .innerJoinAndSelect('booking.user', 'user')
+      .where('booking.id = :bookingId', { bookingId })
+      .where('user.id = :userId', { userId })
+      .getOne();
+
+    if (!booking) {
+      throw new NotFoundException('Booking not found');
+    }
+    if (booking.status === 0) {
+      throw new ConflictException(`Booking already cancelled`);
+    }
+    if (booking.status !== 1) {
+      throw new ConflictException(
+        `Cannot edit a booking that is either cancelled, failed or expired`,
+      );
+    }
+    if (!booking?.seat?.isReserved) {
+      throw new ConflictException('Seat is not reserved for you');
+    }
+    booking.seat.isReserved = false;
+    booking.status = 0;
 
     const savedBooking = await this.bookingRepository.save(booking);
     return savedBooking;

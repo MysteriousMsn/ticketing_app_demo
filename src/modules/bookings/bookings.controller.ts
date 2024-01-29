@@ -9,13 +9,16 @@ import {
   Body,
   ParseIntPipe,
   Req,
+  Patch,
+  HttpStatus,
+  Res,
 } from '@nestjs/common';
 import { BookingsService } from './bookings.service';
 import { CreateBookingDto, createBookingSchema } from './bookings.dto';
 import { Roles } from 'src/decorators/roles.decorator';
 import { Role } from 'src/enums/roles.enum';
 import { ZodValidationPipe } from 'src/utils/zod.validation';
-import { Public } from 'src/decorators/public.decorator';
+import { Request, Response } from 'express';
 
 @Controller('bookings')
 export class BookingsController {
@@ -28,7 +31,7 @@ export class BookingsController {
     @Body(new ZodValidationPipe(createBookingSchema))
     createBookingDto: CreateBookingDto,
   ) {
-    const userId = request['user'].id;
+    const userId = request['user'].sub;
     return this.bookingService.create(createBookingDto, userId);
   }
 
@@ -58,8 +61,24 @@ export class BookingsController {
     @Body(new ZodValidationPipe(createBookingSchema))
     updateBookingDto: CreateBookingDto,
   ) {
-    const userId = request['user'].id;
+    const userId = request['user'].sub;
     return this.bookingService.update(id, updateBookingDto, userId);
+  }
+
+  @Patch(':id')
+  @Roles(Role.User, Role.Admin)
+  async Cancel(
+    @Req() request: Request,
+    @Res() res: Response,
+    @Param('id', ParseIntPipe) id: number,
+  ) {
+    const userId = request['user'].sub;
+    const data = await this.bookingService.cancel(id, userId);
+    res.status(HttpStatus.OK).json({
+      status: HttpStatus.OK,
+      message: 'Booking cancelled successfully.',
+      data: data,
+    });
   }
 
   @Delete(':id')

@@ -11,11 +11,15 @@ import {
   ParseIntPipe,
 } from '@nestjs/common';
 import { LocationsService } from './locations.service';
-import { CreateLocationDto } from './locations.dto';
-import { UpdateLocationDto } from '../bookings/bookings.dto';
+import { CreateLocationDto, createLocationSchema } from './locations.dto';
+import {
+  UpdateLocationDto,
+  updateLocationSchema,
+} from '../bookings/bookings.dto';
 import { Public } from 'src/decorators/public.decorator';
 import { Roles } from 'src/decorators/roles.decorator';
 import { Role } from 'src/enums/roles.enum';
+import { ZodValidationPipe } from 'src/utils/zod.validation';
 
 @Controller('locations')
 export class LocationsController {
@@ -23,7 +27,10 @@ export class LocationsController {
 
   @Post()
   @Roles(Role.Admin)
-  create(@Body() createLocationDto: CreateLocationDto) {
+  create(
+    @Body(new ZodValidationPipe(createLocationSchema))
+    createLocationDto: CreateLocationDto,
+  ) {
     return this.locationService.create(createLocationDto);
   }
 
@@ -43,7 +50,8 @@ export class LocationsController {
   @Roles(Role.Admin)
   update(
     @Param('id', ParseIntPipe) id: number,
-    @Body() updateLocationDto: UpdateLocationDto,
+    @Body(new ZodValidationPipe(updateLocationSchema))
+    updateLocationDto: UpdateLocationDto,
   ) {
     return this.locationService.update(id, updateLocationDto);
   }
