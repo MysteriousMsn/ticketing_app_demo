@@ -1,5 +1,9 @@
 // booking.service.ts
-import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  ConflictException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { BookingEntity } from 'src/entity/booking.entity';
@@ -32,14 +36,17 @@ export class BookingsService {
     private readonly ticketRepository: Repository<TicketEntity>,
   ) {}
 
-  async create(createBookingDto: CreateBookingDto): Promise<BookingEntity> {
-    const { userId, seatId, venueId, movieId, ticketId } = createBookingDto;
+  async create(
+    createBookingDto: CreateBookingDto,
+    userId: number,
+  ): Promise<BookingEntity> {
+    const { seatId, venueId, movieId, ticketId } = createBookingDto;
     const [user, seat, venue, movie, ticket] = await Promise.all([
-        this.userRepository.findOneBy({id: userId}),
-        this.seatRepository.findOneBy({id: seatId}),
-        this.venueRepository.findOneBy({id: venueId}),
-        this.movieRepository.findOneBy({id: movieId}),
-        this.ticketRepository.findOneBy({id: ticketId})
+      this.userRepository.findOneBy({ id: userId }),
+      this.seatRepository.findOneBy({ id: seatId }),
+      this.venueRepository.findOneBy({ id: venueId }),
+      this.movieRepository.findOneBy({ id: movieId }),
+      this.ticketRepository.findOneBy({ id: ticketId }),
     ]);
     if (!user || !seat || !venue || !movie || !ticket) {
       throw new NotFoundException('One or more related entities not found');
@@ -61,7 +68,7 @@ export class BookingsService {
   }
 
   async findOne(id: number): Promise<BookingEntity> {
-    const booking = await this.bookingRepository.findOneBy({id});
+    const booking = await this.bookingRepository.findOneBy({ id });
     if (!booking) {
       throw new NotFoundException('Booking not found');
     }
@@ -79,10 +86,25 @@ export class BookingsService {
       .getMany();
     return bookings;
   }
+  async findBookingsByUser(userId: number): Promise<BookingEntity[]> {
+    const bookings = await this.bookingRepository
+      .createQueryBuilder('booking')
+      .innerJoinAndSelect('booking.user', 'user')
+      .innerJoinAndSelect('booking.seat', 'seat')
+      .innerJoinAndSelect('booking.venue', 'venue')
+      .innerJoinAndSelect('booking.movie', 'movie')
+      .innerJoinAndSelect('booking.ticket', 'ticket')
+      .where('user.id =:userId', { userId })
+      .getMany();
+    return bookings;
+  }
 
-  async update(id: number, updateBookingDto: CreateBookingDto): Promise<BookingEntity> {
-    
-    const { userId, seatId, venueId, movieId, ticketId } = updateBookingDto;
+  async update(
+    id: number,
+    updateBookingDto: CreateBookingDto,
+    userId: number,
+  ): Promise<BookingEntity> {
+    const { seatId, venueId, movieId, ticketId } = updateBookingDto;
     const [booking, user, seat, venue, movie, ticket] = await Promise.all([
       this.bookingRepository
         .createQueryBuilder('booking')
@@ -95,23 +117,31 @@ export class BookingsService {
       this.movieRepository.findOneBy({ id: movieId }),
       this.ticketRepository.findOneBy({ id: ticketId }),
     ]);
+    if (!booking) {
+      throw new NotFoundException('Booking not found');
+    }
+    if (booking.status !== 1) {
+      throw new ConflictException(
+        `Cannot edit a booking that is either cancelled, failed or expired`,
+      );
+    }
     if (!user || !seat || !venue || !movie || !ticket) {
       throw new NotFoundException('One or more related entities not found');
     }
     if (seat.isReserved) {
-      throw new ConflictException('Seat is reserved');
+      throw new ConflictException('Seat is already reserved');
     }
 
     booking.seat.isReserved = false;
     await this.bookingRepository.save(booking);
     seat.isReserved = true;
-    
+
     booking.user = user;
     booking.seat = seat;
     booking.venue = venue;
     booking.movie = movie;
     booking.ticket = ticket;
-    
+
     const savedBooking = await this.bookingRepository.save(booking);
     return savedBooking;
   }

@@ -1,10 +1,20 @@
-// venue.entity.ts
-import { Entity, PrimaryGeneratedColumn, Column, OneToMany, ManyToMany, JoinTable, CreateDateColumn, UpdateDateColumn } from 'typeorm';
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  OneToMany,
+  ManyToMany,
+  JoinTable,
+  CreateDateColumn,
+  UpdateDateColumn,
+  ManyToOne,
+} from 'typeorm';
 import { EventEntity } from './event.entity';
 import { MovieEntity } from './movie.entity';
 import { SeatEntity } from './seat.entity';
 import { TicketEntity } from './ticket.entity';
 import { BookingEntity } from './booking.entity';
+import { LocationEntity } from './location.entity';
 
 @Entity('venues')
 export class VenueEntity {
@@ -14,19 +24,19 @@ export class VenueEntity {
   @Column()
   name: string;
 
-  @Column()
-  location: number;
+  @ManyToOne(() => LocationEntity, (location) => location.venues)
+  location: LocationEntity;
 
   @OneToMany(() => EventEntity, (event) => event.venue, { cascade: ['insert'] })
   events: EventEntity[];
 
-  @ManyToMany(() => MovieEntity, { cascade: ['insert']})
+  @ManyToMany(() => MovieEntity, { cascade: ['insert'] })
   @JoinTable({ name: 'movie_venue_mappings' })
   movies: MovieEntity[];
 
   @OneToMany(() => SeatEntity, (seat) => seat.venue, { cascade: true })
   seats: SeatEntity[];
-  
+
   @OneToMany(() => TicketEntity, (ticket) => ticket.venue, { cascade: true })
   tickets: TicketEntity[];
 
@@ -34,8 +44,8 @@ export class VenueEntity {
   bookings: BookingEntity[];
 
   @CreateDateColumn()
-  createdDate: Date
+  createdDate: Date;
 
   @UpdateDateColumn()
-  updatedDate: Date
+  updatedDate: Date;
 }

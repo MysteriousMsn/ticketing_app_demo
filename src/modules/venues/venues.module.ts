@@ -10,9 +10,19 @@ import { UserEntity } from 'src/entity/user.entity';
 import { MovieEntity } from 'src/entity/movie.entity';
 import { SeatsService } from '../seats/seats.service';
 import { SeatEntity } from 'src/entity/seat.entity';
+import { LocationEntity } from 'src/entity/location.entity';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([VenueEntity, UserEntity, RoleEntity, MovieEntity, SeatEntity])],
+  imports: [
+    TypeOrmModule.forFeature([
+      VenueEntity,
+      UserEntity,
+      RoleEntity,
+      MovieEntity,
+      SeatEntity,
+      LocationEntity,
+    ]),
+  ],
   providers: [
     VenuesService,
     SeatsService,

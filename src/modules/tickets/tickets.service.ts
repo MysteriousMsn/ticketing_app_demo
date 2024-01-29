@@ -27,7 +27,7 @@ export class TicketsService {
     .getOne();
 
   if (!venue) {
-    throw new NotFoundException('ticket not found');
+    throw new NotFoundException('venue not found with the seat');
   }
   const seat = venue.seats.find((s) => s.id === seatId);
   return { venue, seat };

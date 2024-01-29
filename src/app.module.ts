@@ -24,6 +24,9 @@ import { TicketsModule } from './modules/tickets/tickets.module';
 import { BookingsController } from './modules/bookings/bookings.controller';
 import { BookingsService } from './modules/bookings/bookings.service';
 import { BookingsModule } from './modules/bookings/bookings.module';
+import { LocationEntity } from './entity/location.entity';
+import { LocationsController } from './modules/locations/locations.controller';
+import { LocationsModule } from './modules/locations/locations.module';
 @Module({
   imports: [
     AuthModule,
@@ -35,7 +38,7 @@ import { BookingsModule } from './modules/bookings/bookings.module';
     }),
     TypeOrmModule.forRoot({
       type: 'mysql',
-      host :process.env.DB_HOST,
+      host: process.env.DB_HOST,
       port: Number(`${process.env.DB_PORT}`),
       username: `${process.env.DB_USERNAME}`,
       password: `${process.env.DB_PASSWORD}`,
@@ -49,7 +52,8 @@ import { BookingsModule } from './modules/bookings/bookings.module';
         BookingEntity,
         MovieEntity,
         SeatEntity,
-        TicketEntity
+        TicketEntity,
+        LocationEntity,
       ],
       synchronize: true,
     }),
@@ -57,13 +61,16 @@ import { BookingsModule } from './modules/bookings/bookings.module';
     SeatsModule,
     TicketsModule,
     BookingsModule,
+    LocationsModule,
   ],
-  controllers: [AppController, VenuesController, SeatsController, BookingsController],
-  providers: [
-    AppService,
-    SeatsService,
-    BookingsService
+  controllers: [
+    AppController,
+    VenuesController,
+    SeatsController,
+    BookingsController,
+    LocationsController,
   ],
+  providers: [AppService, SeatsService, BookingsService],
 })
 export class AppModule {
   constructor(private dataSource: DataSource) {}

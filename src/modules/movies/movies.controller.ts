@@ -1,4 +1,12 @@
-import { Controller, Get, Param, Post, Body, Put, Delete, UsePipes } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Param,
+  Post,
+  Body,
+  Put,
+  Delete,
+} from '@nestjs/common';
 import { Roles } from 'src/decorators/roles.decorator';
 import { Role } from 'src/enums/roles.enum';
 import { MoviesService } from './movies.service';
@@ -18,20 +26,23 @@ export class MoviesController {
   }
 
   @Get(':id')
+  @Public()
   async findById(@Param('id') id: string): Promise<MovieEntity | undefined> {
     return this.moviesService.findById(Number(id));
   }
   @Post()
   @Roles(Role.Admin)
-  async create(@Body(new ZodValidationPipe(MovieSchema)) createMovieDto: MovieDto): Promise<MovieEntity> {
+  async create(
+    @Body(new ZodValidationPipe(MovieSchema)) createMovieDto: MovieDto,
+  ): Promise<MovieEntity> {
     return this.moviesService.create(createMovieDto);
   }
   @Put(':id')
   @Roles(Role.Admin)
   async update(
     @Param('id') id: string,
-    @Body(new ZodValidationPipe(MovieSchema)) updateMovieDto: MovieDto
-    ): Promise<MovieEntity | undefined> {
+    @Body(new ZodValidationPipe(MovieSchema)) updateMovieDto: MovieDto,
+  ): Promise<MovieEntity | undefined> {
     return this.moviesService.update(Number(id), updateMovieDto);
   }
 

@@ -1,4 +1,4 @@
-import { Entity, PrimaryGeneratedColumn, ManyToOne, JoinColumn, Column, OneToOne, CreateDateColumn, UpdateDateColumn } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, ManyToOne, JoinColumn, Column, CreateDateColumn, UpdateDateColumn } from 'typeorm';
 import { UserEntity } from './user.entity';
 import { SeatEntity } from './seat.entity';
 import { VenueEntity } from './venue.entity';
@@ -30,7 +30,7 @@ export class BookingEntity {
   @JoinColumn({ name: 'ticketId' })
   ticket: TicketEntity;
 
-  @Column({comment: '0=cancelled, 1=booked, 2=Completed'})
+  @Column({default: 1, comment: '0=Cancelled, 1=Booked, 2=Completed, Failed=3'})
   status: number;
 
   @CreateDateColumn()
