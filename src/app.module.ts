@@ -8,7 +8,6 @@ import { UserEntity } from './entity/user.entity';
 import { ConfigModule } from '@nestjs/config';
 import { DataSource } from 'typeorm';
 import { RoleEntity } from './entity/role.entity';
-import { EventEntity } from './entity/event.entity';
 import { VenueEntity } from './entity/venue.entity';
 import { TicketEntity } from './entity/ticket.entity';
 import { BookingEntity } from './entity/booking.entity';
@@ -46,7 +45,6 @@ import { LocationsModule } from './modules/locations/locations.module';
       entities: [
         UserEntity,
         RoleEntity,
-        EventEntity,
         VenueEntity,
         TicketEntity,
         BookingEntity,

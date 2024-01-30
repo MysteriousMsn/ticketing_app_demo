@@ -8,6 +8,7 @@ import {
   OneToMany,
   CreateDateColumn,
   UpdateDateColumn,
+  ManyToMany,
 } from 'typeorm';
 import { VenueEntity } from './venue.entity';
 import { TicketEntity } from './ticket.entity';
@@ -40,7 +41,10 @@ export class SeatEntity {
   @OneToMany(() => TicketEntity, (ticket) => ticket.seat)
   tickets: TicketEntity[];
 
-  @OneToMany(() => BookingEntity, (booking) => booking.seat)
+  // @OneToMany(() => BookingEntity, (booking) => booking.seat)
+  // bookings: BookingEntity[];
+
+  @ManyToMany(() => BookingEntity, (booking) => booking.seats)
   bookings: BookingEntity[];
 
   @Column({ default: 1, comment: '0=Inactive, 1=Active' })

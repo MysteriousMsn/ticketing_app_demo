@@ -13,7 +13,9 @@ export class SeatsService {
 
   async createSeatsForVenue(venue: VenueEntity): Promise<void> {
     const rows = ['A', 'B'];
-    const columns = Array.from({ length: 2 }, (_, index) => (index + 1).toString());
+    const columns = Array.from({ length: 2 }, (_, index) =>
+      (index + 1).toString(),
+    );
 
     const seats: SeatEntity[] = [];
 
@@ -24,7 +26,7 @@ export class SeatsService {
           seatNumber,
           row,
           column,
-          isReserved: false, // You can adjust this based on your logic
+          isReserved: false,
           venue,
         });
         seats.push(newSeat);
