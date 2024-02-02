@@ -24,10 +24,6 @@ export class BookingEntity {
   @JoinColumn({ name: 'userId' })
   user: UserEntity;
 
-  // @ManyToOne(() => SeatEntity, (seat) => seat.bookings, { onDelete: 'CASCADE', cascade: ['update'] })
-  // @JoinColumn({ name: 'seatId' })
-  // seat: SeatEntity;
-
   @ManyToMany(() => SeatEntity, (seat) => seat.bookings, {
     cascade: ['insert', 'update', 'remove'],
   })
@@ -46,15 +42,25 @@ export class BookingEntity {
   @JoinColumn({ name: 'movieId' })
   movie: MovieEntity;
 
-  @ManyToOne(() => TicketEntity, (ticket) => ticket.bookings, {
-    onDelete: 'CASCADE',
-  })
-  @JoinColumn({ name: 'ticketId' })
-  ticket: TicketEntity;
+  // @ManyToOne(() => TicketEntity, (ticket) => ticket.bookings, {
+  //   onDelete: 'CASCADE',
+  // })
+  // @JoinColumn({ name: 'ticketId' })
+  // ticket: TicketEntity;
+
+  @ManyToMany(() => TicketEntity, (ticket) => ticket.bookings)
+  @JoinTable({ name: 'booking_ticket_mappings' })
+  tickets: TicketEntity[];
+
+  @Column()
+  totalSeats: number;
+
+  @Column()
+  amount: number;
 
   @Column({
     default: 1,
-    comment: '0=Cancelled, 1=Booked, 2=Completed, Failed=3',
+    comment: '0=Cancelled, 1=Booked, 2=Completed, 3=Failed',
   })
   status: number;
 

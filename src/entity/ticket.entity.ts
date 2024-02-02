@@ -5,6 +5,8 @@ import {
   ManyToOne,
   JoinColumn,
   OneToMany,
+  ManyToMany,
+  JoinTable,
 } from 'typeorm';
 import { VenueEntity } from './venue.entity';
 import { SeatEntity } from './seat.entity';
@@ -18,9 +20,12 @@ export class TicketEntity {
   @Column()
   name: string;
 
-  @ManyToOne(() => SeatEntity, (seat) => seat.tickets, { onDelete: 'CASCADE' })
-  @JoinColumn({ name: 'seatId', referencedColumnName: 'id' })
-  seat: SeatEntity;
+  // @ManyToOne(() => SeatEntity, (seat) => seat.tickets, { onDelete: 'CASCADE' })
+  // @JoinColumn({ name: 'seatId', referencedColumnName: 'id' })
+  // seat: SeatEntity;
+
+  @OneToMany(() => SeatEntity, (seat) => seat.ticket)
+  seats: SeatEntity[];
 
   @Column({ type: 'float' })
   price: number;
@@ -33,8 +38,13 @@ export class TicketEntity {
   @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
   priceUpdatedAt: Date;
 
-  @OneToMany(() => BookingEntity, (booking) => booking.ticket, {
-    onDelete: 'CASCADE',
+  // @OneToMany(() => BookingEntity, (booking) => booking.ticket, {
+  //   onDelete: 'CASCADE',
+  // })
+  // bookings: BookingEntity[];
+
+  @ManyToMany(() => BookingEntity, (booking) => booking.tickets, {
+    cascade: ['insert', 'update', 'remove'],
   })
   bookings: BookingEntity[];
 

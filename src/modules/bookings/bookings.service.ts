@@ -11,33 +11,18 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import { DataSource, Repository } from 'typeorm';
 import { BookingEntity } from 'src/entity/booking.entity';
-import { CreateBookingDto } from './bookings.dto';
+import { CreateBookingDto, UpdateBookingDto } from './bookings.dto';
 import { UserEntity } from 'src/entity/user.entity';
 import { SeatEntity } from 'src/entity/seat.entity';
 import { VenueEntity } from 'src/entity/venue.entity';
 import { MovieEntity } from 'src/entity/movie.entity';
 import { TicketEntity } from 'src/entity/ticket.entity';
-
+import * as moment from 'moment-timezone';
 @Injectable()
 export class BookingsService {
   constructor(
     @InjectRepository(BookingEntity)
     private readonly bookingRepository: Repository<BookingEntity>,
-
-    @InjectRepository(UserEntity)
-    private readonly userRepository: Repository<UserEntity>,
-
-    @InjectRepository(SeatEntity)
-    private readonly seatRepository: Repository<SeatEntity>,
-
-    @InjectRepository(VenueEntity)
-    private readonly venueRepository: Repository<VenueEntity>,
-
-    @InjectRepository(MovieEntity)
-    private readonly movieRepository: Repository<MovieEntity>,
-
-    @InjectRepository(TicketEntity)
-    private readonly ticketRepository: Repository<TicketEntity>,
 
     private dataSource: DataSource,
   ) {}
@@ -51,45 +36,34 @@ export class BookingsService {
     await queryRunner.startTransaction();
 
     try {
-      const { seatIds, totalSeats, venueId, movieId, ticketId } =
-        createBookingDto;
+      const { seatIds, totalSeats, venueId, movieId } = createBookingDto;
 
-      const [user, seats, venue, movie, ticket] = await Promise.all([
-        queryRunner.query('SELECT * FROM users WHERE id = ? AND status = ?', [
-          userId,
-          1,
-        ]),
-        queryRunner.query('SELECT * FROM seats WHERE id in(?) AND status = ?', [
-          seatIds,
-          1,
-        ]),
-        queryRunner.query('SELECT * FROM venues WHERE id = ? AND status = ?', [
-          venueId,
-          1,
-        ]),
-        queryRunner.query('SELECT * FROM movies WHERE id = ? AND status = ?', [
-          movieId,
-          1,
-        ]),
-        queryRunner.query('SELECT * FROM tickets WHERE id = ? AND status = ?', [
-          ticketId,
-          1,
-        ]),
+      const [user, seats, venue, movie] = await Promise.all([
+        queryRunner.manager
+          .createQueryBuilder(UserEntity, 'user')
+          .where('id = :userId', { userId })
+          .andWhere('status = :status', { status: 1 })
+          .getOne(),
+        queryRunner.manager
+          .createQueryBuilder(SeatEntity, 'seat')
+          .innerJoinAndSelect('seat.ticket', 'ticket')
+          .innerJoinAndSelect('seat.venue', 'venue')
+          .where('seat.id IN(:seatIds)', { seatIds })
+          .andWhere('venue.id =:venueId', { venueId })
+          .andWhere('seat.status =:status', { status: 1 })
+          .getMany(),
+        queryRunner.manager
+          .createQueryBuilder(VenueEntity, 'venue')
+          .where('id = :venueId', { venueId })
+          .andWhere('status = :status', { status: 1 })
+          .getOne(),
+        queryRunner.manager
+          .createQueryBuilder(MovieEntity, 'movie')
+          .where('id = :movieId', { movieId })
+          .andWhere('status = :status', { status: 1 })
+          .getOne(),
       ]);
-      // const [user, seat, venue, movie, ticket] = await Promise.all([
-      //   this.userRepository.findOneBy({ id: userId }),
-      //   this.seatRepository.findOneBy({ id: seatId }),
-      //   this.venueRepository.findOneBy({ id: venueId }),
-      //   this.movieRepository.findOneBy({ id: movieId }),
-      //   this.ticketRepository.findOneBy({ id: ticketId }),
-      // ]);
-      if (
-        !user?.length ||
-        !seats?.length ||
-        !venue?.length ||
-        !movie?.length ||
-        !ticket?.length
-      ) {
+      if (!user || !seats?.length || !venue || !movie) {
         throw new NotFoundException('One or more related entities not found');
       }
       const reservedSeats = seats.filter((s) => s.isReserved).map((s) => s.id);
@@ -101,10 +75,6 @@ export class BookingsService {
           `Seat ${reservedSeats.join(',')} already reserved.`,
         );
       }
-      // if (seat[0].isReserved) {
-      //   throw new ConflictException('Seat is already reserved');
-      // }
-      // seat[0].isReserved = true;
       const seatNotAvailable = [];
       seats.forEach((seat) => {
         seat.isReserved = true;
@@ -117,14 +87,21 @@ export class BookingsService {
           `Seat ${seatNotAvailable.join(',')} not available.`,
         );
       }
-      const newBooking = this.bookingRepository.create({
-        user: user[0],
-        seats: seats,
-        venue: venue[0],
-        movie: movie[0],
-        ticket: ticket[0],
+      let amount = 0;
+      const tickets = seats.map((s) => {
+        amount += s.ticket.price;
+        return s.ticket;
       });
-      // const savedBooking = await this.bookingRepository.save(newBooking);
+      const newBooking = this.bookingRepository.create({
+        user: user,
+        seats: seats,
+        venue: venue,
+        movie: movie,
+        tickets,
+        totalSeats,
+        amount,
+      });
+
       const savedBooking = await queryRunner.manager.save(newBooking);
       await queryRunner.commitTransaction();
       return savedBooking;
@@ -176,7 +153,7 @@ export class BookingsService {
 
   async update(
     bookingId: number,
-    updateBookingDto: CreateBookingDto,
+    updateBookingDto: UpdateBookingDto,
     userId: number,
     isAdmin: boolean,
   ): Promise<BookingEntity> {
@@ -184,8 +161,8 @@ export class BookingsService {
     await queryRunner.connect();
     await queryRunner.startTransaction();
     try {
-      let bookingQuery = this.bookingRepository
-        .createQueryBuilder('booking')
+      let bookingQuery = queryRunner.manager
+        .createQueryBuilder(BookingEntity, 'booking')
         .innerJoinAndSelect('booking.seats', 'seats')
         .innerJoinAndSelect('booking.user', 'user')
         .where('booking.id = :bookingId', { bookingId });
@@ -194,40 +171,34 @@ export class BookingsService {
         bookingQuery.andWhere('user.id = :userId', { userId });
       }
 
-      const { seatIds, totalSeats, venueId, movieId, ticketId } =
-        updateBookingDto;
-      const [booking, user, seats, venue, movie, ticket] = await Promise.all([
-        bookingQuery.getOne(),
-        queryRunner.query('SELECT * FROM users WHERE id = ? AND status = ?', [
-          userId,
-          1,
-        ]),
-        queryRunner.query('SELECT * FROM seats WHERE id In(?) AND status = ?', [
-          seatIds,
-          1,
-        ]),
-        queryRunner.query('SELECT * FROM venues WHERE id = ? AND status = ?', [
-          venueId,
-          1,
-        ]),
-        queryRunner.query('SELECT * FROM movies WHERE id = ? AND status = ?', [
-          movieId,
-          1,
-        ]),
-        queryRunner.query('SELECT * FROM tickets WHERE id = ? AND status = ?', [
-          ticketId,
-          1,
-        ]),
+      const { seatIds, totalSeats, venueId, movieId } = updateBookingDto;
+      const [booking, user, seats, venue, movie] = await Promise.all([
+        bookingQuery.setLock('pessimistic_write').getOne(),
+        queryRunner.manager
+          .createQueryBuilder(UserEntity, 'user')
+          .where('id = :userId', { userId })
+          .andWhere('status = :status', { status: 1 })
+          .getOne(),
+        queryRunner.manager
+          .createQueryBuilder(SeatEntity, 'seat')
+          .innerJoinAndSelect('seat.ticket', 'ticket')
+          .innerJoinAndSelect('seat.venue', 'venue')
+          .where('seat.id IN(:seatIds)', { seatIds })
+          .andWhere('venue.id =:venueId', { venueId })
+          .andWhere('seat.status =:status', { status: 1 })
+          .getMany(),
+        queryRunner.manager
+          .createQueryBuilder(VenueEntity, 'venue')
+          .where('id = :venueId', { venueId })
+          .andWhere('status = :status', { status: 1 })
+          .getOne(),
+        queryRunner.manager
+          .createQueryBuilder(MovieEntity, 'movie')
+          .where('id = :movieId', { movieId })
+          .andWhere('status = :status', { status: 1 })
+          .getOne(),
       ]);
 
-      // const [booking, user, seat, venue, movie, ticket] = await Promise.all([
-      //   bookingQuery.getOne(),
-      //   this.userRepository.findOneBy({ id: userId, status: 1 }),
-      //   this.seatRepository.findOneBy({ id: seatId, status: 1 }),
-      //   this.venueRepository.findOneBy({ id: venueId, status: 1 }),
-      //   this.movieRepository.findOneBy({ id: movieId, status: 1 }),
-      //   this.ticketRepository.findOneBy({ id: ticketId, status: 1 }),
-      // ]);
       if (!booking) {
         throw new NotFoundException('Booking not found');
       }
@@ -236,18 +207,10 @@ export class BookingsService {
           `Cannot edit a booking that is either cancelled, failed or expired`,
         );
       }
-      if (
-        !user?.length ||
-        !seats?.length ||
-        !venue?.length ||
-        !movie?.length ||
-        !ticket?.length
-      ) {
+      if (!user || !seats?.length || !venue || !movie) {
         throw new NotFoundException('One or more related entities not found');
       }
-      // if (seats[0].isReserved) {
-      //   throw new ConflictException('Seat is already reserved');
-      // }
+
       const allReservedSeats = seats
         .filter((s) => s.isReserved)
         .map((s) => s.id);
@@ -267,27 +230,59 @@ export class BookingsService {
           `Seat ${allReservedSeats.join(',')} already reserved.`,
         );
       }
-      // booking.seat.isReserved = false;
       booking.seats.forEach((seat) => {
         seat.isReserved = false;
+        seat.temporaryLockExpiry = null;
       });
-      // await this.bookingRepository.save(booking);
       await queryRunner.manager.save(booking);
-      // seats[0].isReserved = true;
-      seats.forEach((seat) => {
-        seat.isReserved = true;
-      });
-      booking.user = user[0];
-      booking.seats = seats;
-      booking.venue = venue[0];
-      booking.movie = movie[0];
-      booking.ticket = ticket[0];
 
-      // const savedBooking = await this.bookingRepository.save(booking);
+      const lockedSeats = seats.filter(
+        (seat) =>
+          seat.temporaryLockExpiry && seat.temporaryLockExpiry > new Date(),
+      );
+
+      if (lockedSeats.length > 0) {
+        throw new ConflictException('Seat is temporarily locked');
+      }
+      let amount = 0;
+      const tickets = seats.map((s) => {
+        s.isReserved = true;
+        const temporaryLockDurationInMinutes = 5;
+
+        const now = new Date();
+        const temporaryLockExpiry = new Date(
+          now.getTime() + temporaryLockDurationInMinutes * 60000,
+        );
+        s.temporaryLockExpiry = temporaryLockExpiry;
+        amount += s.ticket.price;
+        return s.ticket;
+      });
+
+      booking.user = user;
+      booking.seats = seats;
+      booking.venue = venue;
+      booking.movie = movie;
+      booking.tickets = tickets;
+      booking.totalSeats = totalSeats;
+      booking.amount = amount;
+
+      const existingBooking = await queryRunner.manager
+        .createQueryBuilder(BookingEntity, 'booking')
+        .where('id = :bookingId', { bookingId: booking.id })
+        .andWhere('updatedDate = :updatedDate', {
+          updatedDate: updateBookingDto.bookingUpdatedDate,
+        })
+        .getOne();
+
+      if (!existingBooking) {
+        throw new BadRequestException('Document is locked');
+      }
+
       const savedBooking = await queryRunner.manager.save(booking);
       await queryRunner.commitTransaction();
       return savedBooking;
     } catch (error) {
+      console.log(error);
       await queryRunner.rollbackTransaction();
       throw new HttpException(
         {

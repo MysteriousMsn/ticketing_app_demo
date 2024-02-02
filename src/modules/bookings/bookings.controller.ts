@@ -14,7 +14,12 @@ import {
   Res,
 } from '@nestjs/common';
 import { BookingsService } from './bookings.service';
-import { CreateBookingDto, createBookingSchema } from './bookings.dto';
+import {
+  CreateBookingDto,
+  UpdateBookingDto,
+  createBookingSchema,
+  updateBookingSchema,
+} from './bookings.dto';
 import { Roles } from 'src/decorators/roles.decorator';
 import { Role } from 'src/enums/roles.enum';
 import { ZodValidationPipe } from 'src/utils/zod.validation';
@@ -58,8 +63,8 @@ export class BookingsController {
   update(
     @Req() request: Request,
     @Param('id', ParseIntPipe) id: number,
-    @Body(new ZodValidationPipe(createBookingSchema))
-    updateBookingDto: CreateBookingDto,
+    @Body(new ZodValidationPipe(updateBookingSchema))
+    updateBookingDto: UpdateBookingDto,
   ) {
     const userId = request['user'].sub;
     const isAdmin = request['isAdmin'];

@@ -38,17 +38,22 @@ export class SeatEntity {
   @JoinColumn({ name: 'venueId' })
   venue: VenueEntity;
 
-  @OneToMany(() => TicketEntity, (ticket) => ticket.seat)
-  tickets: TicketEntity[];
+  // @OneToMany(() => TicketEntity, (ticket) => ticket.seat)
+  // tickets: TicketEntity[];
 
-  // @OneToMany(() => BookingEntity, (booking) => booking.seat)
-  // bookings: BookingEntity[];
+  @ManyToOne(() => TicketEntity, (ticket) => ticket.seats, {
+    onDelete: 'CASCADE',
+  })
+  ticket: TicketEntity;
 
   @ManyToMany(() => BookingEntity, (booking) => booking.seats)
   bookings: BookingEntity[];
 
   @Column({ default: 1, comment: '0=Inactive, 1=Active' })
   status: number;
+
+  @Column({ type: 'timestamp', nullable: true })
+  temporaryLockExpiry: Date;
 
   @CreateDateColumn()
   createdDate: Date;

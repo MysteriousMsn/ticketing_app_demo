@@ -1,4 +1,8 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { TicketEntity } from 'src/entity/ticket.entity';
 import { VenueEntity } from 'src/entity/venue.entity';
@@ -18,19 +22,22 @@ export class TicketsService {
   async findAll(): Promise<TicketEntity[]> {
     return this.ticketRepository.find();
   }
-  async getVenueAndSeat(venueId: number, seatId: number): Promise<{ venue: VenueEntity; seat: SeatEntity }> {
+  async getVenueAndSeat(
+    venueId: number,
+    seatId: number,
+  ): Promise<{ venue: VenueEntity; seat: SeatEntity }> {
     const venue = await this.venueRepository
-    .createQueryBuilder('venue')
-    .innerJoinAndSelect('venue.seats', 'seats')
-    .where('venue.id = :venueId', { venueId })
-    .andWhere('seats.id = :seatId', { seatId })
-    .getOne();
+      .createQueryBuilder('venue')
+      .innerJoinAndSelect('venue.seats', 'seats')
+      .where('venue.id = :venueId', { venueId })
+      .andWhere('seats.id = :seatId', { seatId })
+      .getOne();
 
-  if (!venue) {
-    throw new NotFoundException('venue not found with the seat');
-  }
-  const seat = venue.seats.find((s) => s.id === seatId);
-  return { venue, seat };
+    if (!venue) {
+      throw new NotFoundException('venue not found with the seat');
+    }
+    const seat = venue.seats.find((s) => s.id === seatId);
+    return { venue, seat };
   }
 
   private async checkTicketExistence(seatId: string): Promise<void> {
@@ -40,37 +47,64 @@ export class TicketsService {
       .getOne();
 
     if (existingTicket) {
-      throw new BadRequestException('Ticket already exists for the specified seat');
+      throw new BadRequestException(
+        'Ticket already exists for the specified seat',
+      );
     }
   }
   async createTicket(ticketDto: TicketDto): Promise<TicketEntity> {
-    const { venue, seat } = await this.getVenueAndSeat(ticketDto.venue, ticketDto.seat);
+    // const { venue, seat } = await this.getVenueAndSeat(
+    //   ticketDto.venue,
+    //   ticketDto.seat,
+    // );
 
-      const existingTicket = await this.ticketRepository
-      .createQueryBuilder('ticket')
-      .where('ticket.seat = :seat', { seat: seat.id })
+    const venue = await this.venueRepository
+      .createQueryBuilder('venue')
+      .where('venue.id = :venueId', { venueId: ticketDto.venue })
       .getOne();
-  
-    if (existingTicket) {
-      throw new BadRequestException('Ticket already exists for the specified seat');
+
+    if (!venue) {
+      throw new NotFoundException('Venue not found');
     }
-   
+
+    const existingTicket = await this.ticketRepository
+      .createQueryBuilder('ticket')
+      .innerJoinAndSelect('ticket.venue', 'venue')
+      .where('ticket.name = :name', { name: ticketDto.name })
+      .andWhere('venue.id = :venueId', { venueId: ticketDto.venue })
+      .getOne();
+
+    if (existingTicket) {
+      throw new BadRequestException('Ticket already exists');
+    }
+
     const newTicket = this.ticketRepository.create({
       name: ticketDto.name,
       price: ticketDto.price,
-      seat,
       venue,
     });
     return this.ticketRepository.save(newTicket);
   }
 
-  async updateTicket(ticketId: string, ticketDto: TicketDto): Promise<TicketEntity> {
-    const { venue, seat } = await this.getVenueAndSeat(ticketDto.venue, ticketDto.seat);
+  async updateTicket(
+    ticketId: string,
+    ticketDto: TicketDto,
+  ): Promise<TicketEntity> {
+    // const { venue, seat } = await this.getVenueAndSeat(
+    //   ticketDto.venue,
+    //   ticketDto.seat,
+    // );
+    const venue = await this.venueRepository
+      .createQueryBuilder('venue')
+      .where('venue.id = :venueId', { venueId: ticketDto.venue })
+      .getOne();
+
+    if (!venue) {
+      throw new NotFoundException('Venue not found');
+    }
     const existingTicket = await this.ticketRepository
       .createQueryBuilder('ticket')
-      .innerJoinAndSelect('ticket.seat', 'seat')
       .where('ticket.id = :ticketId', { ticketId })
-      .andWhere('seat.id = :seatId', { seatId: ticketDto.seat })
       .getOne();
 
     if (!existingTicket) {
@@ -79,7 +113,6 @@ export class TicketsService {
 
     existingTicket.name = ticketDto.name;
     existingTicket.price = ticketDto.price;
-    existingTicket.seat = seat;
     existingTicket.venue = venue;
 
     return this.ticketRepository.save(existingTicket);

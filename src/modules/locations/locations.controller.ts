@@ -11,11 +11,12 @@ import {
   ParseIntPipe,
 } from '@nestjs/common';
 import { LocationsService } from './locations.service';
-import { CreateLocationDto, createLocationSchema } from './locations.dto';
 import {
+  CreateLocationDto,
   UpdateLocationDto,
+  createLocationSchema,
   updateLocationSchema,
-} from '../bookings/bookings.dto';
+} from './locations.dto';
 import { Public } from 'src/decorators/public.decorator';
 import { Roles } from 'src/decorators/roles.decorator';
 import { Role } from 'src/enums/roles.enum';
