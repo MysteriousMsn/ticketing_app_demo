@@ -26,6 +26,9 @@ import { BookingsModule } from './modules/bookings/bookings.module';
 import { LocationEntity } from './entity/location.entity';
 import { LocationsController } from './modules/locations/locations.controller';
 import { LocationsModule } from './modules/locations/locations.module';
+import { StripeService } from './modules/stripe/stripe.service';
+import { StripeModule } from './modules/stripe/stripe.module';
+import { StripeController } from './modules/stripe/stripe.controller';
 @Module({
   imports: [
     AuthModule,
@@ -60,6 +63,7 @@ import { LocationsModule } from './modules/locations/locations.module';
     TicketsModule,
     BookingsModule,
     LocationsModule,
+    StripeModule,
   ],
   controllers: [
     AppController,
@@ -67,8 +71,9 @@ import { LocationsModule } from './modules/locations/locations.module';
     SeatsController,
     BookingsController,
     LocationsController,
+    StripeController,
   ],
-  providers: [AppService, SeatsService, BookingsService],
+  providers: [AppService, SeatsService, BookingsService, StripeService],
 })
 export class AppModule {
   constructor(private dataSource: DataSource) {}

@@ -16,13 +16,13 @@ import { UserEntity } from 'src/entity/user.entity';
 import { SeatEntity } from 'src/entity/seat.entity';
 import { VenueEntity } from 'src/entity/venue.entity';
 import { MovieEntity } from 'src/entity/movie.entity';
-import { TicketEntity } from 'src/entity/ticket.entity';
-import * as moment from 'moment-timezone';
+import { StripeService } from '../stripe/stripe.service';
 @Injectable()
 export class BookingsService {
   constructor(
     @InjectRepository(BookingEntity)
     private readonly bookingRepository: Repository<BookingEntity>,
+    private readonly stripeService: StripeService,
 
     private dataSource: DataSource,
   ) {}
@@ -103,6 +103,14 @@ export class BookingsService {
       });
 
       const savedBooking = await queryRunner.manager.save(newBooking);
+      const checkoutSession = await this.stripeService.createCheckoutSession(
+        amount,
+        'usd',
+        'https://example.com/success',
+        'https://example.com/cancel',
+        savedBooking.id,
+      );
+      console.log(checkoutSession);
       await queryRunner.commitTransaction();
       return savedBooking;
     } catch (error) {
@@ -202,9 +210,9 @@ export class BookingsService {
       if (!booking) {
         throw new NotFoundException('Booking not found');
       }
-      if (booking.status !== 1) {
+      if (booking.status !== 2) {
         throw new ConflictException(
-          `Cannot edit a booking that is either cancelled, failed or expired`,
+          `Cannot edit a booking that is either cancelled, inprocess, failed or expired`,
         );
       }
       if (!user || !seats?.length || !venue || !movie) {
@@ -295,7 +303,6 @@ export class BookingsService {
       await queryRunner.release();
     }
   }
-
   async cancel(bookingId: number, userId: number): Promise<BookingEntity> {
     const booking = await this.bookingRepository
       .createQueryBuilder('booking')
@@ -311,9 +318,9 @@ export class BookingsService {
     if (booking.status === 0) {
       throw new ConflictException(`Booking already cancelled`);
     }
-    if (booking.status !== 1) {
+    if (booking.status !== 2) {
       throw new ConflictException(
-        `Cannot edit a booking that is either cancelled, failed or expired`,
+        `Cannot edit a booking that is either cancelled, inprogress, failed or expired`,
       );
     }
     if (booking?.seats?.filter((s) => !s.isReserved).length) {

@@ -1,3 +1,4 @@
+import { StripeService } from './../stripe/stripe.service';
 import { BookingEntity } from 'src/entity/booking.entity';
 import { Module } from '@nestjs/common';
 import { MovieEntity } from 'src/entity/movie.entity';
@@ -13,15 +14,26 @@ import { SeatEntity } from 'src/entity/seat.entity';
 import { TicketEntity } from 'src/entity/ticket.entity';
 
 @Module({
-    imports: [TypeOrmModule.forFeature([BookingEntity, MovieEntity, UserEntity, SeatEntity, TicketEntity, RoleEntity, VenueEntity])],
-    providers: [
-      BookingsService,
-      {
-        provide: APP_GUARD,
-        useClass: RolesGuard,
-      },
-    ],
-    exports: [BookingsService, TypeOrmModule],
-    controllers: [BookingsController],
-  })
-  export class BookingsModule {}
+  imports: [
+    TypeOrmModule.forFeature([
+      BookingEntity,
+      MovieEntity,
+      UserEntity,
+      SeatEntity,
+      TicketEntity,
+      RoleEntity,
+      VenueEntity,
+    ]),
+  ],
+  providers: [
+    BookingsService,
+    StripeService,
+    {
+      provide: APP_GUARD,
+      useClass: RolesGuard,
+    },
+  ],
+  exports: [BookingsService, StripeService, TypeOrmModule],
+  controllers: [BookingsController],
+})
+export class BookingsModule {}

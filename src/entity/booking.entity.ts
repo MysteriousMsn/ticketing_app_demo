@@ -60,7 +60,7 @@ export class BookingEntity {
 
   @Column({
     default: 1,
-    comment: '0=Cancelled, 1=Booked, 2=Completed, 3=Failed',
+    comment: '0=cancelled, 1=in_process, 2=paid, 3=completed, 4=failed',
   })
   status: number;
 
