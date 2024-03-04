@@ -29,6 +29,7 @@ import { LocationsModule } from './modules/locations/locations.module';
 import { StripeService } from './modules/stripe/stripe.service';
 import { StripeModule } from './modules/stripe/stripe.module';
 import { StripeController } from './modules/stripe/stripe.controller';
+import { ThrottlerModule } from '@nestjs/throttler';
 @Module({
   imports: [
     AuthModule,
@@ -64,6 +65,12 @@ import { StripeController } from './modules/stripe/stripe.controller';
     BookingsModule,
     LocationsModule,
     StripeModule,
+    ThrottlerModule.forRoot([
+      {
+        ttl: 60000,
+        limit: 10,
+      },
+    ]),
   ],
   controllers: [
     AppController,
