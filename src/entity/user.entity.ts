@@ -1,3 +1,5 @@
+import * as bcrypt from 'bcrypt';
+
 import {
   Entity,
   Column,
@@ -7,6 +9,7 @@ import {
   ManyToMany,
   JoinTable,
   OneToMany,
+  BeforeInsert,
 } from 'typeorm';
 import { RoleEntity } from './role.entity';
 import { BookingEntity } from './booking.entity';
@@ -48,4 +51,15 @@ export class UserEntity {
 
   @UpdateDateColumn()
   updatedDate: Date;
+
+  @BeforeInsert()
+  async hashPassword(): Promise<void> {
+    const saltRounds = 10;
+    const salt = await bcrypt.genSalt(saltRounds);
+    this.password = await bcrypt.hash(this.password, salt);
+  }
+
+  async compareHash(plainTextPassword: string): Promise<boolean> {
+    return bcrypt.compare(plainTextPassword, this.password);
+  }
 }
