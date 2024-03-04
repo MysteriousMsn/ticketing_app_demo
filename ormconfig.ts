@@ -15,4 +15,5 @@ export const typeormConfig = {
     'src/modules/**/*.view-entity{.ts,.js}',
   ],
   migrations: ['src/database/migrations/*{.ts,.js}'],
+  migrationsRun: true,
 };
