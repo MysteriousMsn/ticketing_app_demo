@@ -1,5 +1,6 @@
-import { Logger, OnModuleInit } from '@nestjs/common';
+import { Logger, OnModuleInit, UseFilters } from '@nestjs/common';
 import {
+  BaseWsExceptionFilter,
   MessageBody,
   OnGatewayConnection,
   OnGatewayDisconnect,
@@ -7,8 +8,10 @@ import {
   SubscribeMessage,
   WebSocketGateway,
   WebSocketServer,
+  WsException,
 } from '@nestjs/websockets';
 import { Server } from 'socket.io';
+import { CustomExceptionFilter } from 'src/filters/custom-exception.filter';
 
 @WebSocketGateway()
 export class EventsGateway
@@ -41,6 +44,7 @@ export class EventsGateway
   handleDisconnect(client: any) {
     this.logger.log(`Cliend id:${client.id} disconnected`);
   }
+  @UseFilters(new BaseWsExceptionFilter())
   @SubscribeMessage('message')
   handleMessage(@MessageBody() body: any) {
     console.log(body);

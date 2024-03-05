@@ -3,6 +3,7 @@ import { AppModule } from './app.module';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import helmet from 'helmet';
+import { RedisIoAdapter } from './adapter/redis.adapter';
 
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule, {
@@ -20,6 +21,12 @@ async function bootstrap() {
   SwaggerModule.setup('swagger', app, document);
   app.useBodyParser('json', { limit: '10mb' });
   app.use(helmet());
+
+  const redisIoAdapter = new RedisIoAdapter(app);
+  await redisIoAdapter.connectToRedis();
+
+  app.useWebSocketAdapter(redisIoAdapter);
+
   await app.listen(3000);
 }
 bootstrap();
