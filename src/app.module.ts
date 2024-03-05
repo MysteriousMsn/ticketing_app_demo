@@ -30,6 +30,7 @@ import { StripeService } from './modules/stripe/stripe.service';
 import { StripeModule } from './modules/stripe/stripe.module';
 import { StripeController } from './modules/stripe/stripe.controller';
 import { ThrottlerModule } from '@nestjs/throttler';
+import { EventsGateway } from './modules/events/events.gateway';
 @Module({
   imports: [
     AuthModule,
@@ -80,7 +81,7 @@ import { ThrottlerModule } from '@nestjs/throttler';
     LocationsController,
     StripeController,
   ],
-  providers: [AppService, SeatsService, BookingsService, StripeService],
+  providers: [AppService, SeatsService, BookingsService, StripeService, EventsGateway],
 })
 export class AppModule {
   constructor(private dataSource: DataSource) {}
