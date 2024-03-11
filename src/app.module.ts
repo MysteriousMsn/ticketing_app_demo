@@ -59,6 +59,7 @@ import { EventsGateway } from './modules/events/events.gateway';
         LocationEntity,
       ],
       synchronize: true,
+      migrations: ['src/database/migrations/*.{.ts,.js}'],
     }),
     MoviesModule,
     SeatsModule,
@@ -81,7 +82,13 @@ import { EventsGateway } from './modules/events/events.gateway';
     LocationsController,
     StripeController,
   ],
-  providers: [AppService, SeatsService, BookingsService, StripeService, EventsGateway],
+  providers: [
+    AppService,
+    SeatsService,
+    BookingsService,
+    StripeService,
+    EventsGateway,
+  ],
 })
 export class AppModule {
   constructor(private dataSource: DataSource) {}
