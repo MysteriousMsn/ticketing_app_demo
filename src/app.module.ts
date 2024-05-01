@@ -42,11 +42,16 @@ import { EventsGateway } from './modules/events/events.gateway';
     }),
     TypeOrmModule.forRoot({
       type: 'mysql',
-      host: process.env.DB_HOST,
-      port: Number(`${process.env.DB_PORT}`),
-      username: `${process.env.DB_USERNAME}`,
-      password: `${process.env.DB_PASSWORD}`,
-      database: `${process.env.DB_DATABASE}`,
+      // host: process.env.DB_HOST,
+      // port: Number(`${process.env.DB_PORT}`),
+      // username: `${process.env.DB_USERNAME}`,
+      // password: `${process.env.DB_PASSWORD}`,
+      // database: `${process.env.DB_DATABASE}`,
+      host: 'localhost',
+      port: 3306,
+      username: `root`,
+      password: ``,
+      database: `ticketing_app_demo`,
       entities: [
         UserEntity,
         RoleEntity,
@@ -91,5 +96,5 @@ import { EventsGateway } from './modules/events/events.gateway';
   ],
 })
 export class AppModule {
-  constructor(private dataSource: DataSource) {}
+  constructor(private dataSource: DataSource) { }
 }

@@ -12,7 +12,7 @@ export class StripeService {
     @InjectRepository(BookingEntity)
     private readonly bookingRepository: Repository<BookingEntity>,
   ) {
-    this.stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
+    this.stripe = new Stripe('Add your secret key here', {
       apiVersion: '2023-10-16',
     });
   }

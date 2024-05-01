@@ -15,7 +15,7 @@ export class AuthGuard implements CanActivate {
   constructor(
     private jwtService: JwtService,
     private reflector: Reflector,
-  ) {}
+  ) { }
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const isPublic = this.reflector.getAllAndOverride<boolean>(IS_PUBLIC_KEY, [
@@ -33,7 +33,8 @@ export class AuthGuard implements CanActivate {
     }
     try {
       const payload = await this.jwtService.verifyAsync(token, {
-        secret: `${process.env.JWT_SECRET}`,
+        // secret: `${process.env.JWT_SECRET}`,
+        secret: `sanffjkghdxbshdgijrmbvbk`,
       });
 
       if (!payload.status) {
